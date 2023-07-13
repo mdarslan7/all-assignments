@@ -30,8 +30,82 @@
  */
 
 const express = require("express")
+const bodyParser = require('body-parser');
 const PORT = 3000;
 const app = express();
+const jwt = require('jsonwebtoken');
+const secretKey = 'kaioken';
+
+app.use(bodyParser.json());
+
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+
+let userdetails = [];
+
+app.post('/signup', (req, res) => {
+  let username = req.body.username;
+  var exist = false;
+  for(let i=0; i<userdetails.length; i++) {
+    if(userdetails[i]['username'] == username) {
+      exist = true;
+      break;
+    }
+  }
+  if(exist == false) {
+    let userDetailsBody = req.body;
+    userdetails.push(userDetailsBody);
+    res.status(201).send("Signup successful");
+  }
+  else {
+    res.status(400).send("Username already exists!")
+  }
+});
+
+app.post('/login', (req, res) => {
+  let exist = false;
+  const {username, password} = req.body;
+  for(let i=0; i<userdetails.length; i++) {
+    if(userdetails[i]['username'] == username) {
+      if(userdetails[i]['password'] == password) {
+        const token = jwt.sign({ username: username }, secretKey);
+        res.json({ token: token, ...userdetails[i]});
+        exist = true;
+        break;
+      }
+    }
+  }
+
+  if(exist == false) {
+    res.status(401).send();
+  }
+});
+
+app.get("/data", (req, res) => {
+  var username = req.headers.username;
+  var password = req.headers.password;
+  let userFound = false;
+  for (var i = 0; i<userdetails.length; i++) {
+    if (userdetails[i].username === username && userdetails[i].password === password) {
+        userFound = true;
+        break;
+    }
+  }
+
+  if (userFound) {
+    let usersToReturn = [];
+    for (let i = 0; i<userdetails.length; i++) {
+        usersToReturn.push({
+            firstName: userdetails[i].firstName,
+            lastName: userdetails[i].lastName,
+            email: userdetails[i].username
+        });
+    }
+    res.json({
+        users: userdetails,
+    });
+  } else {
+    res.sendStatus(401);
+  }
+});
 
 module.exports = app;

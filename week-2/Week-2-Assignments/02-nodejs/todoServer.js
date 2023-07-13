@@ -39,11 +39,98 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
+
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
+const port = 3000;
 
 app.use(bodyParser.json());
+
+ let todos = [];
+ let ids = [];
+
+function generateUniqueId() {
+  const alphanumeric = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const idLength = 8;
+
+  let randomId = '';
+  for (let i = 0; i < idLength; i++) {
+    const randomIndex = Math.floor(Math.random() * alphanumeric.length);
+    randomId += alphanumeric[randomIndex];
+  }
+
+  return randomId;
+}
+
+function add(todoObj) {
+  const id = generateUniqueId();
+  todos.push(todoObj);
+  ids.push(id);
+}
+
+// 1. GET / todos
+app.get('/todos', (req, res) => {
+  res.send(todos);
+  console.log(ids);
+});
+
+// 2. GET /todos/:id
+app.get('/todos/:id', (req, res) => {
+  var currentId = req.params.id;
+  var found = false;
+  for(let i=0; i<ids.length; i++) {
+    if(currentId === ids[i]) {
+      res.send({ id: currentId, ...todos[i] });
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    res.status(404).send("Error 404 Not Found!");
+  }
+});
+
+// 3. POST /todos
+app.post('/todos', (req, res) => {
+  let newTodo = req.body;
+  add(newTodo);
+  res.status(201).send({ id: ids[ids.length - 1] });
+});
+
+// 4. PUT /todos/:id
+app.put('/todos/:ids', (req, res) => {
+  var currentId = req.params.ids;
+  var updatedBody = req.body;
+  var found = false;
+  for(let i=0; i<ids.length; i++) {
+    if(currentId == ids[i]) {
+      todos[i] = updatedBody;
+      res.status(200).send(updatedBody);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    res.status(404).send("Error 404 Not Found!");
+  }
+});
+
+// 5. DELETE /todos/:id
+app.delete('/todos/:ids', (req, res) => {
+  var currentId = req.params.ids;
+  var found = false;
+  for(let i=0; i<ids.length; i++) {
+    if(currentId == ids[i]) {
+      todos.splice(i, 1);
+      res.send("Todo Deleted!");
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    res.status(404).send("Error 404 Not Found!");
+  }
+});
 
 module.exports = app;

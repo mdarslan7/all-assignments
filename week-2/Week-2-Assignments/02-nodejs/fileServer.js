@@ -20,6 +20,42 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const PORT = 3000;
 
+app.get('/files', (req, res) => {
+  const directoryPath = 'C:\\Users\\Md. Arslan\\OneDrive\\Desktop\\Full Stack Course @Harkirat\\all-assignments\\week-2\\Week-2-Assignments\\02-nodejs\\files';
+  fs.readdir(directoryPath, (error, files) => {
+    if (error) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+    res.json(files);
+  });
+});
+
+app.get('/file/:filename', (req, res) => {  
+  const directoryPath = 'C:\\Users\\Md. Arslan\\OneDrive\\Desktop\\Full Stack Course @Harkirat\\all-assignments\\week-2\\Week-2-Assignments\\02-nodejs\\files';
+  const file = req.params.filename;
+  const filePath = path.join(directoryPath, file);
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        res.status(404).send("File not found");
+      } else {
+        res.status(500).send("Internal Server Error");
+      }
+      return;
+    }
+    res.status(200).send(data);
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).send('Route not found');
+});
+
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
 
 module.exports = app;
